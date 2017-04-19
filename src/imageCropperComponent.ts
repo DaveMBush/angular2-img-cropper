@@ -40,7 +40,7 @@ export class ImageCropperComponent implements AfterViewInit, OnChanges {
     public renderer:Renderer;
 
     private isCropPositionUpdateNeeded:boolean;
-
+    private ngAfterViewInitRan = false;
     constructor(renderer:Renderer) {
         this.renderer = renderer;
     }
@@ -70,6 +70,7 @@ export class ImageCropperComponent implements AfterViewInit, OnChanges {
         }
 
         this.cropper.prepare(canvas);
+        this.ngAfterViewInitRan = true;
     }
 
     public ngOnChanges(changes:SimpleChanges):void {
@@ -143,6 +144,11 @@ export class ImageCropperComponent implements AfterViewInit, OnChanges {
     }
 
     public setImage(image:HTMLImageElement, newBounds:any = null) {
+        // make sure our ngAfterViewInit ran and we have a canvas to display on.
+        if(!this.ngAfterViewInitRan || !this.cropcanvas.nativeElement.offsetWidth) {
+            setTimeout(this.setImage.bind(this, image, newBounds),10);
+            return;
+        }
         let self = this;
         this.renderer.setElementAttribute(this.cropcanvas.nativeElement, 'class', `${this.settings.cropperClass} ${this.settings.croppingClass}`);
         this.intervalRef = window.setInterval(() => {
@@ -157,8 +163,10 @@ export class ImageCropperComponent implements AfterViewInit, OnChanges {
 
                 clearInterval(self.intervalRef);
                 self.getOrientedImage(image, (img:HTMLImageElement) => {
-                    if (this.settings.dynamicSizing) {
-                        let canvas:HTMLCanvasElement = this.cropcanvas.nativeElement;
+                    let canvas:HTMLCanvasElement = this.cropcanvas.nativeElement;
+                    if (this.settings.dynamicSizing ||
+                            this.settings.width > canvas.offsetWidth ||
+                            this.settings.height > canvas.offsetHeight) {
                         this.settings.canvasWidth = canvas.offsetWidth;
                         this.settings.canvasHeight = canvas.offsetHeight;
                         this.cropper.resizeCanvas(canvas.offsetWidth, canvas.offsetHeight, false);
@@ -171,6 +179,16 @@ export class ImageCropperComponent implements AfterViewInit, OnChanges {
                     }
                     self.image.original = img;
                     let bounds = self.cropper.getCropBounds();
+                    // force the default crop to top left;
+                    if(bounds.top > 0) {
+                        bounds.bottom = bounds.bottom - bounds.top;
+                        bounds.top = 0;
+                    }
+                    if(bounds.left > 0) {
+                        bounds.right = bounds.right - bounds.left;
+                        bounds.left = 0;
+                    }
+                    self.cropper.updateCropPosition(bounds);
                     self.image.image = self.cropper.getCroppedImage().src;
                     if (newBounds != null) {
                         bounds = newBounds;
@@ -180,6 +198,9 @@ export class ImageCropperComponent implements AfterViewInit, OnChanges {
                 });
             }
         }, 10);
+        // force cropper to resize;
+        self.cropper.dragCorner(0, 0, this.cropper['tl']);
+
     }
 
     private isCropPositionChanged(changes:SimpleChanges):boolean {

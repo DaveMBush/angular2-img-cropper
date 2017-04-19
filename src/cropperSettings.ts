@@ -16,6 +16,7 @@ export interface ICropperSettings {
     allowedFilesRegex?: RegExp;
     rounded: boolean;
     keepAspect: boolean;
+    aspectRatio?: number;
     preserveSize: boolean;
     compressRatio: number;
 }
@@ -48,7 +49,7 @@ export class CropperSettings implements ICropperSettings {
 
     public allowedFilesRegex: RegExp = /\.(jpe?g|png|gif)$/i;
     public preserveSize: boolean = false;
-
+    public aspectRatio: number = 0;
     public compressRatio:number = 1.0;
 
     private _rounded: boolean = false;

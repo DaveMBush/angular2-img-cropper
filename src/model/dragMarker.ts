@@ -13,8 +13,8 @@ export class DragMarker extends Handle {
         super(x, y, radius, cropperSettings);
         this.iconPoints = [];
         this.scaledIconPoints = [];
-        this.getDragIconPoints(this.iconPoints, 1);
-        this.getDragIconPoints(this.scaledIconPoints, 1.2);
+        this.getDragIconPoints(this.iconPoints, radius / 20);
+        this.getDragIconPoints(this.scaledIconPoints, 1.2 * radius / 20);
     }
 
     public draw(ctx: CanvasRenderingContext2D) {

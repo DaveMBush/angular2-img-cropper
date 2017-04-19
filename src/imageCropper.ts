@@ -78,6 +78,9 @@ export class ImageCropper extends ImageCropperModel {
         this.center = new DragMarker(x + (width / 2), y + (height / 2), touchRadius, this.cropperSettings);
         this.keepAspect = keepAspect;
         this.aspectRatio = height / width;
+        if(cropperSettings.aspectRatio) {
+            this.aspectRatio = cropperSettings.aspectRatio;
+        }
         this.croppedImage = new Image();
         this.currentlyInteracting = false;
         this.cropWidth = croppedWidth;
